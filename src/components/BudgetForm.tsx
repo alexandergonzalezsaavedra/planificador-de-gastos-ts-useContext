@@ -14,7 +14,6 @@ const BudgetForm = () => {
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        console.log("definir presupuesto")
         dispatch({ type: 'add-budget', payload: { budget } })
     }
     return (

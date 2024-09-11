@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import type { DraftExpens, Value } from "../types";
 import { categories } from "../data/categories"
 import DatePicker from 'react-date-picker';
@@ -33,14 +33,28 @@ const ExpenseForm = () => {
     }
     const [error, setError] = useState('')
 
-    const { dispatch } = useBudget()
+    const { dispatch, state } = useBudget()
+
+    useEffect(() => {
+        if (state.editingId) {
+            const editingExpense = state.expenses.filter(expense => expense.id === state.editingId)[0]
+            setExpense(editingExpense)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.editingId])
+
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (Object.values(expense).includes('')) {
             setError('Todos los campos son obligatorios')
             return
         }
-        dispatch({ type: 'add-expense', payload: { expense } })
+        // agregar o actualizar el gasto
+        if (state.editingId) {
+            dispatch({ type: 'update-expense', payload: { expense: { id: state.editingId, ...expense } } })
+        } else {
+            dispatch({ type: 'add-expense', payload: { expense } })
+        }
         // reiniciar state formulario
         setExpense({
             amount: 0,
@@ -49,11 +63,10 @@ const ExpenseForm = () => {
             date: new Date(),
         })
     }
-
     return (
         <form className="space-y-5" onSubmit={handleSubmit}>
             <legend className="text-center text-2xl border-b-2 border-blue-600 py-2 text-blue-600 font-black">
-                Nuevo gasto
+                {state.editingId ? 'Guardar cambios' : 'Nuevo gasto'}
             </legend>
             {
                 error &&
@@ -138,7 +151,7 @@ const ExpenseForm = () => {
             <input
                 className="w-full py-2 font-bold text-white bg-blue-600 hover:bg-blue-800 duration-1000 uppercase rounded-full cursor-pointer"
                 type="submit"
-                value="Agregar gasto"
+                value={state.editingId ? 'Guardar cambios' : 'Guardar gasto'}
             />
         </form>
     )
